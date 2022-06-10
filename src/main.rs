@@ -1,10 +1,19 @@
-use actix_web::{get, middleware, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, http, middleware, web};
+use actix_web::{App, HttpResponse, HttpServer, Responder};
 use handlebars::Handlebars;
 use serde_json::json;
 
 #[get("/")]
 async fn index(hb: web::Data<Handlebars<'_>>) -> impl Responder {
-  HttpResponse::Ok().body(hb.render("index", &json!({})).unwrap())
+  let data = json!({
+    "forecasts": [
+      {"name": "Redmond", "precipitation": 12.34f64},
+      {"name": "Portland", "precipitation": 1.23f64}
+    ]
+  });
+  HttpResponse::Ok()
+    .content_type(http::header::ContentType::html())
+    .body(hb.render("index", &data).unwrap())
 }
 
 #[actix_web::main]
