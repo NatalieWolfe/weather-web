@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: weather-web
+  annotations:
+    keel.sh/policy: all
+    keel.sh/trigger: poll
+  name: weather-web
+  namespace: oz-lab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: weather-web
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 50%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: weather-web
+    spec:
+      containers:
+      - image: ghcr.io/nataliewolfe/weather-web:v0.1.0
+        imagePullPolicy: IfNotPresent
+        name: weather-web
+        ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: http
+            scheme: HTTP
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        envFrom:
+        - configMapRef:
+            name: weather-web-config
+        - secretRef:
+            name: weather-web-secrets
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
